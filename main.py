@@ -52,7 +52,7 @@ for user in users_list:
 
             print(price)
             if price < product["target_price"]:
-                with smtplib.SMTP(f"{os.getenv("SMTP_ADDRESS")}", 587) as connection:
+                with smtplib.SMTP(os.getenv("SMTP_ADDRESS"), 587) as connection:
                     connection.starttls()
                     connection.login(f"{os.getenv("EMAIL")}", f"{os.getenv('PASSWORD')}")
                     connection.sendmail(
