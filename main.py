@@ -44,15 +44,18 @@ product_list = requests.get(f"{DB_LINK}/rest/v1/products", headers=HEADERS).json
 for user in users_list:
     for product in product_list:
         if product["user_id"] == user["id"]:
-            try:
-                res = requests.get(product["amazon_link"], headers=AMAZON_HEADERS, timeout=15).text
+            proxies = {
+                "http": os.getenv("GEORGIA_PROXY"),
+                "https": os.getenv("GEORGIA_PROXY")
+            }
 
-                soup = BeautifulSoup(res, "html.parser")
-            except Exception as e:
-                print(e)
-                continue
+            res = requests.get(product["amazon_link"], headers=AMAZON_HEADERS, proxies=proxies, timeout=15).text
+
+            soup = BeautifulSoup(res, "html.parser")
+
             price = float(soup.find("span", class_="a-offscreen").text.split("GEL")[1].replace(",", "").strip())
 
+            print(price)
             if price < product["target_price"]:
                 with smtplib.SMTP(os.getenv("SMTP_ADDRESS"), 587) as connection:
                     connection.starttls()
