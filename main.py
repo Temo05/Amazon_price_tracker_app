@@ -54,10 +54,10 @@ for user in users_list:
             if price < product["target_price"]:
                 with smtplib.SMTP(os.getenv("SMTP_ADDRESS"), 587) as connection:
                     connection.starttls()
-                    connection.login(f"{os.getenv("EMAIL")}", f"{os.getenv('PASSWORD')}")
+                    connection.login(os.getenv("EMAIL"), os.getenv("PASSWORD"))
                     connection.sendmail(
-                        from_addr=f"{os.getenv('EMAIL')}",
-                        to_addrs=f"{user["email"]}",
+                        from_addr=os.getenv('EMAIL'),
+                        to_addrs=user["email"],
                         msg=f"Amazon Price Alert !!\n\n{soup.find("span", id="productTitle").text.strip()} is on sale for GEL{price}.\n {product["amazon_link"]}".encode(
                             "utf-8"),
                     )
