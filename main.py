@@ -58,8 +58,7 @@ for user in users_list:
                     connection.sendmail(
                         from_addr=os.getenv('EMAIL'),
                         to_addrs=user["email"],
-                        msg=f"Amazon Price Alert !!\n\n{soup.find("span", id="productTitle").text.strip()} is on sale for GEL{price}.\n {product["amazon_link"]}".encode(
-                            "utf-8"),
+                        msg = f"Amazon Price Alert !!\n\n{soup.find('span', id='productTitle').text.strip()} is on sale for GEL{price}.\n {product['amazon_link']}".encode('utf-8')
                     )
 # cursor.close()
 # mydb.close()
