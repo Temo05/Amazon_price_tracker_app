@@ -1,0 +1,36 @@
+name: Daily Amazon Price Check
+
+on:
+  schedule:
+    - cron: "0 9 * * *"   # every day at 09:00 UTC
+  workflow_dispatch:     # manual run button
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: Run price tracker
+      env:
+        DB_LINK: ${{ secrets.DB_LINK }}
+        DB_KEY: ${{ secrets.DB_KEY }}
+        EMAIL_ADDRESS: ${{ secrets.EMAIL_ADDRESS }}
+        EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+        EMAIL: ${{ secrets.EMAIL }}
+        PASSWORD: ${{ secrets.PASSWORD }}
+        SMTP_ADDRESS: ${{ secrets.SMTP_ADDRESS }}
+        HEADER: ${{ secrets.HEADER }}
+      run: |
+        python main.py
