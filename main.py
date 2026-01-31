@@ -7,7 +7,7 @@ path = find_dotenv()
 load_dotenv(path)
 header = os.getenv("HEADER")
 
-json = json.loads(header)
+AMAZON_HEADERS = json.loads(os.getenv("HEADER"))
 #
 # mydb = mysql.connector.connect(
 #     host="localhost",
@@ -44,13 +44,15 @@ product_list = requests.get(f"{DB_LINK}/rest/v1/products", headers=HEADERS).json
 for user in users_list:
     for product in product_list:
         if product["user_id"] == user["id"]:
-            res = requests.get(product["amazon_link"], headers=json).text
+            try:
+                res = requests.get(product["amazon_link"], headers=AMAZON_HEADERS, timeout=15).text
 
-            soup = BeautifulSoup(res, "html.parser")
-
+                soup = BeautifulSoup(res, "html.parser")
+            except Exception as e:
+                print(e)
+                continue
             price = float(soup.find("span", class_="a-offscreen").text.split("GEL")[1].replace(",", "").strip())
 
-            print(price)
             if price < product["target_price"]:
                 with smtplib.SMTP(os.getenv("SMTP_ADDRESS"), 587) as connection:
                     connection.starttls()
@@ -58,7 +60,7 @@ for user in users_list:
                     connection.sendmail(
                         from_addr=os.getenv('EMAIL'),
                         to_addrs=user["email"],
-                        msg = f"Amazon Price Alert !!\n\n{soup.find('span', id='productTitle').text.strip()} is on sale for GEL{price}.\n {product['amazon_link']}".encode('utf-8')
+                        msg = f"Subject:Amazon Price Alert !!\n\n{soup.find('span', id='productTitle').text.strip()} is on sale for GEL{price}.\n {product['amazon_link']}".encode('utf-8')
                     )
 # cursor.close()
 # mydb.close()
