@@ -7,7 +7,15 @@ path = find_dotenv()
 load_dotenv(path)
 header = os.getenv("HEADER")
 
-AMAZON_HEADERS = json.loads(os.getenv("HEADER"))
+AMAZON_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1",
+}
+
 
 def convert_usd_to_gel(usd_amount):
     url = "https://api.exchangerate.host/convert"
