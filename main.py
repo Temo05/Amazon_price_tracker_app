@@ -8,6 +8,17 @@ load_dotenv(path)
 header = os.getenv("HEADER")
 
 AMAZON_HEADERS = json.loads(os.getenv("HEADER"))
+
+def convert_usd_to_gel(usd_amount):
+    url = "https://api.exchangerate.host/convert"
+    params = {
+        "from": "USD",
+        "to": "GEL",
+        "amount": usd_amount
+    }
+    response = requests.get(url, params=params).json()
+    return response.get("result", usd_amount)
+
 #
 # mydb = mysql.connector.connect(
 #     host="localhost",
@@ -49,18 +60,23 @@ for user in users_list:
 
             soup = BeautifulSoup(res, "html.parser")
 
-            price = float(soup.find("span", class_="a-offscreen").text.split("GEL")[1].replace(",", "").strip())
+
+            try:
+                price = float(soup.find("span", class_="a-offscreen").text.split("GEL")[1].replace(",", "").strip())
+            except:
+                price = float(soup.find("span", class_="a-offscreen").text.split("USD")[1].replace(",", "").strip())
+                price = convert_usd_to_gel(price)
 
             print(price)
-            if price < product["target_price"]:
-                with smtplib.SMTP(os.getenv("SMTP_ADDRESS"), 587) as connection:
-                    connection.starttls()
-                    connection.login(os.getenv("EMAIL"), os.getenv("PASSWORD"))
-                    connection.sendmail(
-                        from_addr=os.getenv('EMAIL'),
-                        to_addrs=user["email"],
-                        msg = f"Subject:Amazon Price Alert !!\n\n{soup.find('span', id='productTitle').text.strip()} is on sale for GEL{price}.\n {product['amazon_link']}".encode('utf-8')
-                    )
+            # if price < product["target_price"]:
+            #     with smtplib.SMTP(os.getenv("SMTP_ADDRESS"), 587) as connection:
+            #         connection.starttls()
+            #         connection.login(os.getenv("EMAIL"), os.getenv("PASSWORD"))
+            #         connection.sendmail(
+            #             from_addr=os.getenv('EMAIL'),
+            #             to_addrs=user["email"],
+            #             msg = f"Subject:Amazon Price Alert !!\n\n{soup.find('span', id='productTitle').text.strip()} is on sale for GEL{price}.\n {product['amazon_link']}".encode('utf-8')
+            #         )
 # cursor.close()
 # mydb.close()
 
