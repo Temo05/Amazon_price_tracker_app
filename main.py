@@ -81,7 +81,6 @@ for user in users_list:
             price_symbol = driver.find_element(By.CLASS_NAME, "a-price-symbol").text
             if price_symbol == "$":
                 price = convert_usd_to_gel(price)
-            print(price)
             product_title = driver.find_element(By.ID, "productTitle").text
 
             if price < product["target_price"]:
