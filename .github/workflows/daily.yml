@@ -33,6 +33,6 @@ jobs:
         PASSWORD: ${{ secrets.PASSWORD }}
         SMTP_ADDRESS: ${{ secrets.SMTP_ADDRESS }}
         HEADER: ${{ secrets.HEADER }}
-        GEORGIA_PROXY: ${{ secrets.GEORGIA_PROXY }}
+        CONVERT_API_KEY: ${{ secrets.CONVERT_API_KEY }}
       run: |
         python main.py

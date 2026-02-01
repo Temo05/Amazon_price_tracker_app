@@ -1,31 +1,19 @@
 import requests, smtplib, os, json
 from bs4 import BeautifulSoup
 from dotenv import find_dotenv, load_dotenv
-import mysql.connector
+from selenium import webdriver
+from selenium.webdriver.common.by import By
 
 path = find_dotenv()
 load_dotenv(path)
 header = os.getenv("HEADER")
 
-AMAZON_HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
-    "Accept-Language": "en-US,en;q=0.9",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
-    "Connection": "keep-alive",
-    "Upgrade-Insecure-Requests": "1",
-}
-
-
 def convert_usd_to_gel(usd_amount):
-    url = "https://api.exchangerate.host/convert"
-    params = {
-        "from": "USD",
-        "to": "GEL",
-        "amount": usd_amount
-    }
-    response = requests.get(url, params=params).json()
-    return response.get("result", usd_amount)
+    api_key = os.getenv("CONVERT_API_KEY")
+    url = f"https://v6.exchangerate-api.com/v6/{api_key}/latest/USD"
+    response = requests.get(url).json()
+    price = usd_amount * response["conversion_rates"]["GEL"]
+    return round(price, 2)
 
 #
 # mydb = mysql.connector.connect(
@@ -64,27 +52,44 @@ for user in users_list:
     for product in product_list:
         if product["user_id"] == user["id"]:
 
-            res = requests.get(product["amazon_link"], headers=AMAZON_HEADERS, timeout=15).text
+            # res = requests.get(product["amazon_link"], headers=AMAZON_HEADERS, timeout=15).text
 
-            soup = BeautifulSoup(res, "html.parser")
+            chrome_options = webdriver.ChromeOptions()
+            chrome_options.add_experimental_option("detach", True)
 
+            driver = webdriver.Chrome(options=chrome_options)
+            driver.get(product["amazon_link"])
 
             try:
-                price = float(soup.find("span", class_="a-offscreen").text.split("GEL")[1].replace(",", "").strip())
+                button = driver.find_element(By.XPATH, "//button[@alt='Continue shopping']")
             except:
-                price = float(soup.find("span", class_="a-offscreen").text.split("USD")[1].replace(",", "").strip())
-                price = convert_usd_to_gel(price)
+                price_whole = driver.find_element(By.CLASS_NAME, "a-price-whole").text.replace(",", "")
+                price_fraction = driver.find_element(By.CLASS_NAME, "a-price-fraction").text
+                price = float((".").join([price_whole, price_fraction]))
+            else:
+                button.click()
+                driver.implicitly_wait(2)
+                price_whole = driver.find_element(By.CLASS_NAME, "a-price-whole").text.replace(",", "")
+                price_fraction = driver.find_element(By.CLASS_NAME, "a-price-fraction").text
+                price = float((".").join([price_whole, price_fraction]))
 
+            price_symbol = driver.find_element(By.CLASS_NAME, "a-price-symbol").text
+            if price_symbol == "$":
+                price = convert_usd_to_gel(price)
             print(price)
-            # if price < product["target_price"]:
-            #     with smtplib.SMTP(os.getenv("SMTP_ADDRESS"), 587) as connection:
-            #         connection.starttls()
-            #         connection.login(os.getenv("EMAIL"), os.getenv("PASSWORD"))
-            #         connection.sendmail(
-            #             from_addr=os.getenv('EMAIL'),
-            #             to_addrs=user["email"],
-            #             msg = f"Subject:Amazon Price Alert !!\n\n{soup.find('span', id='productTitle').text.strip()} is on sale for GEL{price}.\n {product['amazon_link']}".encode('utf-8')
-            #         )
+            product_title = driver.find_element(By.ID, "productTitle").text
+
+            if price < product["target_price"]:
+                with smtplib.SMTP(os.getenv("SMTP_ADDRESS"), 587) as connection:
+                    connection.starttls()
+                    connection.login(os.getenv("EMAIL"), os.getenv("PASSWORD"))
+                    connection.sendmail(
+                        from_addr=os.getenv('EMAIL'),
+                        to_addrs=user["email"],
+                        msg = f"Subject: Amazon Price Alert !!\n\n{product_title} is on sale for GEL{price}.\n {product['amazon_link']}".encode('utf-8')
+                    )
+            driver.close()
+
 # cursor.close()
 # mydb.close()
 
