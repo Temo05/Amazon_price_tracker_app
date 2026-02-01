@@ -54,10 +54,7 @@ for user in users_list:
 
             # res = requests.get(product["amazon_link"], headers=AMAZON_HEADERS, timeout=15).text
 
-            chrome_options = webdriver.ChromeOptions()
-            chrome_options.add_experimental_option("detach", True)
-
-            driver = webdriver.Chrome(options=chrome_options)
+            driver = webdriver.Chrome()
             driver.get(product["amazon_link"])
 
             try:
