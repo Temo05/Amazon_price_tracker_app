@@ -3,6 +3,8 @@ from bs4 import BeautifulSoup
 from dotenv import find_dotenv, load_dotenv
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+
 
 path = find_dotenv()
 load_dotenv(path)
@@ -53,8 +55,14 @@ for user in users_list:
         if product["user_id"] == user["id"]:
 
             # res = requests.get(product["amazon_link"], headers=AMAZON_HEADERS, timeout=15).text
+            chrome_options = Options()
+            chrome_options.add_argument("--headless=new")
+            chrome_options.add_argument("--no-sandbox")
+            chrome_options.add_argument("--disable-dev-shm-usage")
+            chrome_options.add_argument("--disable-gpu")
+            chrome_options.add_argument("--window-size=1920,1080")
 
-            driver = webdriver.Chrome()
+            driver = webdriver.Chrome(options=chrome_options)
             driver.get(product["amazon_link"])
 
             try:
